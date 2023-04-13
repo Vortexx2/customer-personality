@@ -1,6 +1,7 @@
 from typing import Literal, Tuple
 
 import os
+import argparse
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -121,12 +122,18 @@ def save_roc_curve(test_probs: np.ndarray, y_test: np.ndarray, file_path: str, m
 
 def main_train(X: np.ndarray, y: np.ndarray, model: Literal['logistic', 'random_forest'],
                save_path: str, train_ratio: float = 0.8):
+  """  
+  Args:
+      X (np.ndarray): _description_
+      y (np.ndarray): _description_
+      model (Literal[&#39;logistic&#39;, &#39;random_forest&#39;]): _description_
+      save_path (str): path where we will save files
+      train_ratio (float, optional): _description_. Defaults to 0.8.
   """
-    csv_path: path to csv with extracted features
-    model: One of ['logistic']
-    save_path: Folder where model related files will be saved
-  """
+
+
   assert 0 < train_ratio < 1, "Enter valid train ratio"
+
   scaler = preprocessing.StandardScaler()
   X = scaler.fit_transform(X)
 
@@ -191,8 +198,13 @@ def main(csv_path: str, model: Literal['logistic', 'random_forest'], save_path: 
 
 
 CSV_PATH = 'data/processed/extracted.csv'
-MODEL = 'random_forest'
 SAVE_PATH = 'models/random_forest'
 os.makedirs(SAVE_PATH, exist_ok=True)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--model', type=str, default='logistic',
+                    help='Model to use (one of ["logistic", "random_forest"])')
+
+MODEL = parser.parse_args().model
 
 main(CSV_PATH, MODEL, SAVE_PATH, train_ratios=(0.7, 0.8, 0.6))

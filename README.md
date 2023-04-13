@@ -3,7 +3,8 @@
 - This is a quickly whipped up, well structured project using a **Customer Personality** dataset.
 - I have conducted a quite in-depth feature extraction (as outlined in `feature_extraction.ipynb`).
 - Models were tinkered with in `train.ipynb`.
-- Currently implemented models:
+- Execute `main_train.py` using `python main_train.py`.
+- Currently implemented models, (switch between them using the cli option `--model` as one of [ `logistic`, `random_forest` ]):
   1. Logistic Regression
   2. Random Forest Classifiers
 
