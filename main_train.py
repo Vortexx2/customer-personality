@@ -6,7 +6,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from scipy import stats as ss
 import seaborn as sns
-from sklearn import model_selection, linear_model, metrics, preprocessing
+from sklearn import model_selection, linear_model, ensemble, metrics, preprocessing
 from sklearn.metrics import roc_auc_score, roc_curve
 import sklearn
 # IMPORTS ABOVE
@@ -31,6 +31,9 @@ def get_accuracy(preds: np.ndarray, y: np.ndarray):
 def train(X_train: np.ndarray, y_train: np.ndarray, model: str, train_ratio: float = 0.8):
   if model == 'logistic':
     clf = linear_model.LogisticRegression(random_state=42)
+
+  elif model == 'random_forest':
+    clf = ensemble.RandomForestClassifier(n_estimators=100)
 
   else:
     raise KeyError("Invalid model named used")
@@ -118,7 +121,8 @@ def save_roc_curve(test_probs: np.ndarray, y_test: np.ndarray, file_path: str, m
   return model_fpr, model_tpr
 
 
-def main_train(X: np.ndarray, y: np.ndarray, model: Literal['logistic'], save_path: str, train_ratio: float = 0.8):
+def main_train(X: np.ndarray, y: np.ndarray, model: Literal['logistic', 'random_forest'],
+               save_path: str, train_ratio: float = 0.8):
   """
     csv_path: path to csv with extracted features
     model: One of ['logistic']
@@ -134,6 +138,8 @@ def main_train(X: np.ndarray, y: np.ndarray, model: Literal['logistic'], save_pa
   print(
       f"No. training examples: {len(X_train)}, No. testing examples: {len(X_test)}")
 
+
+  # TRAIN AND GET ACCURACIES ON MODEL
   clf = train(X, y, model, train_ratio=0.8)
   train_preds = clf.predict(X_train)
   test_preds = clf.predict(X_test)
@@ -142,15 +148,19 @@ def main_train(X: np.ndarray, y: np.ndarray, model: Literal['logistic'], save_pa
       train_preds, y_train), get_accuracy(test_preds, y_test)
   print(f"Train accuracy: {train_accuracy}, Test accuracy: {test_accuracy}")
 
+
+  # PLOT CONFUSION MATRIX
   confusion_matrix = calculate_confusion_matrix(y_test, test_preds)
   confusion_matrix = save_confusion(
       confusion_matrix, os.path.join(save_path, 'confusion.png'))
   print(f"Confusion Matrix saved at {save_path}")
 
+  # PLOT ROC CURVE
   test_probs = clf.predict_proba(X_test)
   save_roc_curve(test_probs, y_test, os.path.join(
       save_path, 'roc-curve.png'), model)
 
+  # PRINT ALL REQUIRED METRICS
   print("\n\n---------- ALL METRICS BELOW -------------")
   calc_metrics = calculate_metrics(confusion_matrix)
   for metric_name, metr in calc_metrics.items():
@@ -162,8 +172,9 @@ def main_train(X: np.ndarray, y: np.ndarray, model: Literal['logistic'], save_pa
   print(f"Test Accuracy: {test_accuracy}")
 
 
-def main(csv_path: str, model: Literal['logistic'], save_path: str, train_ratios: Tuple[ float ]):
-  assert model in ['logistic'], f"Enter valid `model`. Invalid `model` {model}"
+def main(csv_path: str, model: Literal['logistic', 'random_forest'], save_path: str, train_ratios: Tuple[float]):
+  assert model in [
+      'logistic', 'random_forest'], f"Enter valid `model`. Invalid `model` {model}"
 
   X, y = load_and_process_data(csv_path)
   X, y = X.to_numpy(), y.to_numpy()
@@ -182,8 +193,8 @@ def main(csv_path: str, model: Literal['logistic'], save_path: str, train_ratios
 
 
 CSV_PATH = 'data/processed/extracted.csv'
-MODEL = 'logistic'
-SAVE_PATH = 'models/logistic'
+MODEL = 'random_forest'
+SAVE_PATH = 'models/random_forest'
 os.makedirs(SAVE_PATH, exist_ok=True)
 
-main(CSV_PATH, MODEL, SAVE_PATH, (0.7, 0.8, 0.6))
+main(CSV_PATH, MODEL, SAVE_PATH, train_ratios=(0.7, 0.8, 0.6))
